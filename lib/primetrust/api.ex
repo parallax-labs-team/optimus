@@ -3,6 +3,9 @@ defmodule PrimeTrust.API do
   The Prime Trust API~
   """
 
+  # variant of valid methods against the API
+  @type method :: :get | :post | :patch | :delete
+
   @doc """
   https://documentation.primetrust.com/#section/Getting-Started/Idempotent-Object-Creation
   """
@@ -11,12 +14,16 @@ defmodule PrimeTrust.API do
 
   @spec get_base_url() :: String.t()
   defp get_base_url() do
-    Config.resolve(:api_url)
+    #Config.resolve(:api_url)
+    # TODO use config~
+    "https://sandbox.primetrust.com/v2"
   end
 
   @spec get_api_token() :: String.t()
   defp get_api_token() do
-    Config.resolve(:api_token, "")
+    #Config.resolve(:api_token, "")
+    # TODO ...use config
+    System.get_env("PRIMETRUST_TOKEN")
   end
 
   @doc """
@@ -28,5 +35,21 @@ defmodule PrimeTrust.API do
   @spec gen_idempotency_id() :: binary
   def gen_idempotency_id do
     UUID.uuid4(:default)
+  end
+
+  def make_request(:get, data, resource, headers \\ %{}, opts \\ []) do
+    token = get_api_token()
+    base_url = get_base_url()
+    request_url = Path.join(base_url, resource)
+    h = %{ :authorization => "bearer #{token}" }
+    response = :hackney.get(request_url, h |> Map.to_list(), <<>>, [])
+  end
+
+  def make_request(method, data, resource, headers, opts) do
+    token = get_api_token()
+    base_url = get_base_url()
+    request_data = Jason.encode!(data)
+    request_url = Path.join(base_url, resource)
+    response = :hackney.request(method, request_url, headers |> Map.to_list(), request_data, opts)
   end
 end

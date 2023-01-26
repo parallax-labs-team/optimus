@@ -53,18 +53,51 @@ defmodule PrimeTrust.API do
     reify_response(:hackney.request(method, url, req_headers, body, opts))
   end
 
+  @doc """
+  A helper for nice-ifying keys in API responses, because Prime Trust
+  uses hyphens rather than underscores for all their JSON.
+  """
+  @spec decode_key(binary) :: String.t()
+  def decode_key(key) do
+    key
+    |> String.replace("-", "_")
+  end
+
+  @doc """
+  A helper for transforming data from "normal" to Prime Trust-compatible.
+  Just a fancy way of saying "replace _ with -" in map keys since Prime Trust's
+  API deals with hyphens for JSON.
+
+  Does recursive transformation of the keys as various endpoints take nested
+  dicts.
+  """
+  @spec prep_data(map) :: map
+  def prep_data(data) do
+    Map.new(data, fn {k, v} ->
+      v =
+        cond do
+          is_map(v) -> prep_data(v)
+          true -> v
+        end
+
+      k = k |> to_string() |> String.replace("_", "-")
+      {k, v}
+    end)
+  end
+
+  @spec wrap(map, binary) :: map
   defp wrap(m, type) do
     %{data: %{type: type, attributes: m}}
   end
 
   defp reify_response({:ok, status, headers, body}) when status >= 200 and status < 300 do
     {:ok, rsp} = :hackney.body(body)
-    {:ok, Jason.decode!(rsp)}
+    {:ok, Jason.decode!(rsp, keys: &decode_key/1)}
   end
 
   defp reify_response({:ok, status, headers, body}) when status >= 300 do
     {:ok, rsp} = :hackney.body(body)
-    {:error, Jason.decode!(rsp)}
+    {:error, Jason.decode!(rsp, &decode_key/1)}
   end
 
   defp add_idempotency_header(headers, method) when method in [:post] do

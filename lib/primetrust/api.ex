@@ -6,25 +6,11 @@ defmodule PrimeTrust.API do
   # variant of valid methods against the API
   @type method :: :get | :post | :patch | :delete
 
-  @doc """
-  https://documentation.primetrust.com/#section/Getting-Started/Idempotent-Object-Creation
-  """
+  # https://documentation.primetrust.com/#section/Getting-Started/Idempotent-Object-Creation
   @idempotency_header "X-Idempotent-ID"
   @idempotency_header_v2 "X-Idempotent-ID-V2"
 
-  @spec get_base_url() :: String.t()
-  defp get_base_url() do
-    #Config.resolve(:api_url)
-    # TODO use config~
-    "https://sandbox.primetrust.com/v2"
-  end
-
-  @spec get_api_token() :: String.t()
-  defp get_api_token() do
-    #Config.resolve(:api_token, "")
-    # TODO ...use config
-    System.get_env("PRIMETRUST_TOKEN")
-  end
+  @base_url "https://sandbox.primetrust.com/v2"
 
   @doc """
   Utility to generate the ID for requests using either `#{@idempotency_header}`
@@ -37,19 +23,64 @@ defmodule PrimeTrust.API do
     UUID.uuid4(:default)
   end
 
-  def make_request(:get, data, resource, headers \\ %{}, opts \\ []) do
-    token = get_api_token()
-    base_url = get_base_url()
-    request_url = Path.join(base_url, resource)
-    h = %{ :authorization => "bearer #{token}" }
-    response = :hackney.get(request_url, h |> Map.to_list(), <<>>, [])
+  @doc """
+  Make request to the PrimeTrust API.
+  """
+  @spec req(method, String.t(), map, map, list) :: {:ok, map} | {:error, map}
+  def req(:get, resource, body, headers, opts) do
+    request_url = Path.join(@base_url, resource)
+    make_request(:get, request_url, headers, body, opts)
   end
 
-  def make_request(method, data, resource, headers, opts) do
-    token = get_api_token()
-    base_url = get_base_url()
-    request_data = Jason.encode!(data)
-    request_url = Path.join(base_url, resource)
-    response = :hackney.request(method, request_url, headers |> Map.to_list(), request_data, opts)
+  def req(method, resource, body, headers, opts) do
+    {api_type, opts} = Keyword.pop(opts, :api_type)
+    request_data = Jason.encode!(wrap(body, api_type))
+    request_url = Path.join(@base_url, resource)
+    make_request(method, request_url, request_data, headers, opts)
+  end
+
+  # The request maker behind the throne
+  @spec make_request(method, String.t(), iodata, map, list) :: {:ok, map} | {:error, map}
+  defp make_request(method, url, body, headers, opts) do
+    {api_token, opts} = Keyword.pop(opts, :api_token)
+
+    req_headers =
+      headers
+      |> build_headers(api_token)
+      |> add_idempotency_header(method)
+      |> Map.to_list()
+
+    reify_response(:hackney.request(method, url, req_headers, body, opts))
+  end
+
+  defp wrap(m, type) do
+    %{data: %{type: type, attributes: m}}
+  end
+
+  defp reify_response({:ok, status, headers, body}) when status >= 200 and status < 300 do
+    {:ok, rsp} = :hackney.body(body)
+    {:ok, Jason.decode!(rsp)}
+  end
+
+  defp reify_response({:ok, status, headers, body}) when status >= 300 do
+    {:ok, rsp} = :hackney.body(body)
+    {:error, Jason.decode!(rsp)}
+  end
+
+  defp add_idempotency_header(headers, method) when method in [:post] do
+    Map.put_new(headers, @idempotency_header_v2, gen_idempotency_id())
+  end
+
+  defp add_idempotency_header(headers, _method) do
+    headers
+  end
+
+  defp build_headers(headers, api_token) do
+    Map.merge(headers, %{
+      Accept: "application/vnd.api+json",
+      Authorization: "Bearer #{api_token}",
+      Connection: "keep-alive",
+      "Content-Type": "application/json"
+    })
   end
 end

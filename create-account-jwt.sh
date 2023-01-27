@@ -1,8 +1,14 @@
 #!/bin/bash
 
-NAME="YOUR NAME"
-AUTH_EMAIL="YOUR-EMAIL-HERE"
-AUTH_PASSWORD="YOUR_PASSWORD"
+NAME=""
+AUTH_EMAIL=""
+AUTH_PASSWORD=""
+
+if [[ -z "$NAME" || -z "$AUTH_EMAIL" || -z "$AUTH_PASSWORD" ]]
+then
+    echo "Credentials aren't fully specified, please define NAME/AUTH_EMAIL/AUTH_PASSWORD"
+    exit 1
+fi
 
 curl -s -XPOST -H 'Content-Type: application/json' https://sandbox.primetrust.com/v2/users \
 --data @- << BODY

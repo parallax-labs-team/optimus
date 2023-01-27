@@ -12,7 +12,12 @@ defmodule PrimeTrust.Error do
   defstruct [:status, :title, :source, :detail]
 
   @doc false
-  def api_error(error_body) do
-    Jason.decode!(error_body)
+  def from_api_error(status_code, errors) when status_code == 404 do
+    %__MODULE__{
+      status: status_code,
+      title: "Resource not found",
+      source: errors,
+      detail: ""
+    }
   end
 end

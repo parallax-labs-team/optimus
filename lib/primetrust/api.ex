@@ -29,7 +29,7 @@ defmodule PrimeTrust.API do
   @spec req(method, String.t(), map, map, list) :: {:ok, map} | {:error, map}
   def req(:get, resource, body, headers, opts) do
     request_url = Path.join(@base_url, resource)
-    make_request(:get, request_url, headers, body, opts)
+    make_request(:get, request_url, body, headers, opts)
   end
 
   def req(method, resource, body, headers, opts) do
@@ -91,16 +91,19 @@ defmodule PrimeTrust.API do
   end
 
   defp reify_response({:ok, status, headers, body}) when status >= 200 and status < 300 do
-    {:ok, rsp} = :hackney.body(body)
-    {:ok, Jason.decode!(rsp, keys: &decode_key/1)}
+    {:ok, data} = :hackney.body(body)
+    expanded_data = decompress_response(data, headers)
+    {:ok, Jason.decode!(expanded_data, keys: &decode_key/1)}
   end
 
   defp reify_response({:ok, status, headers, body}) when status >= 300 do
     {:ok, rsp} = :hackney.body(body)
-    error = case Jason.decode(rsp, keys: &decode_key/1) do
-      {:ok, %{ "errors" => _} = err} -> err
-      {:error, err} -> PrimeTrust.Error.from_api_error(status, err)
-    end
+
+    error =
+      case Jason.decode(rsp, keys: &decode_key/1) do
+        {:ok, %{"errors" => _} = err} -> err
+        {:error, err} -> PrimeTrust.Error.from_api_error(status, err)
+      end
   end
 
   defp add_idempotency_header(headers, method) when method in [:post] do
@@ -111,9 +114,20 @@ defmodule PrimeTrust.API do
     headers
   end
 
+  defp decompress_response(data, headers) do
+    hm = :hackney_headers.new(headers)
+
+    case :hackney_headers.get_value("Content-Encoding", hm) do
+      "gzip" -> :zlib.gunzip(data)
+      "deflate" -> :zlib.unzip(data)
+      _ -> data
+    end
+  end
+
   defp build_headers(headers, api_token) do
     Map.merge(headers, %{
       Accept: "application/vnd.api+json",
+      "Accept-Encoding": "deflate, gzip",
       Authorization: "Bearer #{api_token}",
       Connection: "keep-alive",
       "Content-Type": "application/json"

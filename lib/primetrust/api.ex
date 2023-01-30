@@ -96,14 +96,13 @@ defmodule PrimeTrust.API do
     {:ok, Jason.decode!(expanded_data, keys: &decode_key/1)}
   end
 
-  defp reify_response({:ok, status, headers, body}) when status >= 300 do
+  defp reify_response({:ok, status, _headers, body}) when status >= 300 do
     {:ok, rsp} = :hackney.body(body)
 
-    error =
-      case Jason.decode(rsp, keys: &decode_key/1) do
-        {:ok, %{"errors" => _} = err} -> err
-        {:error, err} -> PrimeTrust.Error.from_api_error(status, err)
-      end
+    case Jason.decode(rsp, keys: &decode_key/1) do
+      {:ok, %{"errors" => _} = err} -> err
+      {:error, err} -> PrimeTrust.Error.from_api_error(status, err)
+    end
   end
 
   defp add_idempotency_header(headers, method) when method in [:post] do

@@ -68,7 +68,7 @@ defmodule PrimeTrust.Accounts do
   end
 
   @doc """
-  Fetches a signal account by its Prime Trust ID (a uuid)
+  Fetches a single account by its Prime Trust ID (an UUIDv4).
   """
   def get(id, opts \\ []) do
     API.req(:get, @resource <> "/#{id}", <<>>, %{}, opts)

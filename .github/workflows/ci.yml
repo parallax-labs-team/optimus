@@ -1,0 +1,70 @@
+name: Continuous Build
+on: push
+
+jobs:
+  test:
+    env:
+      MIX_ENV: test
+    runs-on: ubuntu-latest
+    name: CI elixir ${{matrix.elixir}} on OTP ${{matrix.otp}}
+    strategy:
+      matrix:
+        elixir: ['1.14']
+        otp: [24]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Set up Elixir/OTP
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Install dependencies
+        run: mix deps.get
+      - name: Test library
+        run: mix test
+
+  linting:
+      runs-on: ubuntu-latest
+      name: Run Linter
+      strategy:
+        matrix:
+          elixir: ['1.14']
+          otp: [24]
+      steps:
+        - name: Checkout repo
+          uses: actions/checkout@v3
+        - name: Set up Elixir/OTP
+          uses: erlef/setup-beam@v1
+          with:
+            elixir-version: ${{ matrix.elixir }}
+            otp-version: ${{ matrix.otp }}
+        - name: Mix Cache
+          uses: actions/cache@v3
+          env:
+            cache: mix
+          with:
+            path: ~/.mix
+            key: cache-${{ runner.os }}-${{ env.cache }}-${{ matrix.otp }}-${{ matrix.elixir }}
+            restore-keys: |
+              cache-${{ runner.os }}-${{ env.cache }}
+        - name: Build Cache
+          uses: actions/cache@v3
+          env:
+            cache: build
+          with:
+            path: _build
+            key: cache-${{ runner.os }}-${{ env.cache }}-${{ matrix.otp }}-${{ matrix.elixir }}
+            restore-keys: |
+              cache-${{ runner.os }}-${{ env.cache }}
+        - name: Fetch dependencies
+          run: mix deps.get
+        - name: Compile lib
+          run: mix compile --warnings-as-errors
+        - name: Run Credo
+          # for now, don't let credo errors bust the build
+          run: mix credo || true
+        - name: Run `mix format`
+          run: mix format --check-formatted
+        - name: Dialyze this
+          run: mix dialyzer --halt-exit-status

@@ -26,22 +26,30 @@ defmodule PrimeTrust.API do
   @doc """
   Make request to the PrimeTrust API.
   """
-  @spec req(method, String.t(), map, map, list) :: {:ok, map} | {:error, map}
-  def req(:get, resource, body, headers, opts) do
+  @spec req(method, resource :: String.t(), headers :: map, body :: map | binary(), opts :: list) ::
+          {:ok, map} | {:error, map}
+  def req(:get, resource, headers, body, opts) do
     request_url = Path.join(@base_url, resource)
     make_request(:get, request_url, body, headers, opts)
   end
 
-  def req(method, resource, body, headers, opts) do
+  def req(method, resource, headers, body, opts) do
     {api_type, opts} = Keyword.pop(opts, :api_type)
     request_data = Jason.encode!(wrap(body, api_type))
     request_url = Path.join(@base_url, resource)
-    make_request(method, request_url, request_data, headers, opts)
+    make_request(method, request_url, headers, request_data, opts)
   end
 
   # The request maker behind the throne
-  @spec make_request(method, String.t(), iodata, map, list) :: {:ok, map} | {:error, map}
-  defp make_request(method, url, body, headers, opts) do
+  @spec make_request(
+          method,
+          url :: String.t(),
+          headers :: map(),
+          body :: iodata(),
+          opts :: list()
+        ) ::
+          {:ok, map} | {:error, map}
+  defp make_request(method, url, headers, body, opts) do
     {api_token, opts} = Keyword.pop(opts, :api_token)
 
     req_headers =

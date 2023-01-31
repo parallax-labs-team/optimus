@@ -1,6 +1,12 @@
 # Optimus
 
-Internal (lol) Elixir library for the [Prime Trust API](https://documentation.primetrust.com).
+**This is a massive work in progress, use `main`**
+
+Elixir library for the [Prime Trust API](https://documentation.primetrust.com).
+
+## Build Status
+
+[![`main` Build](https://github.com/parallax-labs-team/optimus/actions/workflows/contint.yml/badge.svg?branch=main)](https://github.com/parallax-labs-team/optimus/actions/workflows/contint.yml)
 
 ## Installation
 

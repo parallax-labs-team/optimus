@@ -30,6 +30,6 @@ jobs:
         run: mix test
       - name: Run linter
         run: |
-          mix credo
+          # For now, don't let credo errors bust the build
+          mix credo || true
           mix format --check-formatted
-

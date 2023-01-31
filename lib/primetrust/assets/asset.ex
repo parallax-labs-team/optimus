@@ -8,7 +8,7 @@ defmodule PrimeTrust.Asset do
 
   @resource "assets"
   @api_type "assets"
-@doc """
+  @doc """
   Fetches the `/assets` index.
   """
   @spec list(Keyword.t()) :: {:ok, map} | {:error | map}

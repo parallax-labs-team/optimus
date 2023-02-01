@@ -14,7 +14,7 @@ defmodule PrimeTrust.Contact do
   """
   @spec list(Keyword.t()) :: {:ok, map} | {:error, map}
   def list(opts \\ []) do
-    API.req(:get, @resource, <<>>, %{}, opts)
+    API.req(:get, @resource, %{}, <<>>, opts)
   end
 
   @doc """
@@ -22,7 +22,7 @@ defmodule PrimeTrust.Contact do
   """
   @spec get(Keyword.t()) :: {:ok, map} | {:error, map}
   def get(id, opts \\ []) do
-    API.req(:get, @resource <> "/#{id}", <<>>, %{}, opts)
+    API.req(:get, @resource <> "/#{id}", %{}, <<>>, opts)
   end
 
   @doc """
@@ -40,7 +40,7 @@ defmodule PrimeTrust.Contact do
   """
   @spec delete(binary, Keyword.t()) :: {:ok, map} | {:error, map}
   def delete(id, opts \\ []) do
-    API.req(:delete, @resource <> "/#{id}", <<>>, %{}, opts)
+    API.req(:delete, @resource <> "/#{id}", %{}, <<>>, opts)
   end
 
   @doc """
@@ -51,6 +51,6 @@ defmodule PrimeTrust.Contact do
   """
   @spec required_kyc_actions(binary, Keyword.t()) :: {:ok, map} | {:error, map}
   def required_kyc_actions(id, opts \\ []) do
-    API.req(:post, @resource <> "/#{id}/kyc-required-actions", <<>>, %{}, opts)
+    API.req(:post, @resource <> "/#{id}/kyc-required-actions", %{}, <<>>, opts)
   end
 end

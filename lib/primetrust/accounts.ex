@@ -64,14 +64,14 @@ defmodule PrimeTrust.Accounts do
   Fetches the `/accounts` index
   """
   def list(opts \\ []) do
-    API.req(:get, @resource, <<>>, %{}, opts)
+    API.req(:get, @resource, %{}, <<>>, opts)
   end
 
   @doc """
   Fetches a single account by its Prime Trust ID (an UUIDv4).
   """
   def get(id, opts \\ []) do
-    API.req(:get, @resource <> "/#{id}", <<>>, %{}, opts)
+    API.req(:get, @resource <> "/#{id}", %{}, <<>>, opts)
   end
 
   @doc """

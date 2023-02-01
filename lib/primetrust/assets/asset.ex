@@ -13,7 +13,7 @@ defmodule PrimeTrust.Asset do
   """
   @spec list(Keyword.t()) :: {:ok, map} | {:error | map}
   def list(opts \\ []) do
-    API.req(:get, @resource, <<>>, %{}, opts)
+    API.req(:get, @resource, %{}, <<>>, opts)
   end
 
   @doc """
@@ -21,7 +21,7 @@ defmodule PrimeTrust.Asset do
   """
   @spec get(binary, Keyword.t()) :: {:ok, map} | {:error | map}
   def get(id, opts \\ []) do
-    API.req(:get, @resource <> "/#{id}", <<>>, %{}, opts)
+    API.req(:get, @resource <> "/#{id}", %{}, <<>>, opts)
   end
 
   @doc """

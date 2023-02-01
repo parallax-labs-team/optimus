@@ -93,7 +93,11 @@ defmodule PrimeTrust.API do
     end)
   end
 
-  @spec wrap(map, binary) :: map
+  @spec wrap(map | binary, binary) :: map
+  defp wrap(<<>>, type) do
+    %{data: %{type: type, attributes: %{}}}
+  end
+
   defp wrap(m, type) do
     %{data: %{type: type, attributes: m}}
   end

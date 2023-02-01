@@ -82,12 +82,7 @@ defmodule PrimeTrust.API do
   @spec prep_data(map) :: map
   def prep_data(data) do
     Map.new(data, fn {k, v} ->
-      v =
-        cond do
-          is_map(v) -> prep_data(v)
-          true -> v
-        end
-
+      v = if is_map(v), do: prep_data(v), else: v
       k = k |> to_string() |> String.replace("_", "-")
       {k, v}
     end)

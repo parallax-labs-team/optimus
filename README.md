@@ -8,7 +8,7 @@ Elixir library for the [Prime Trust API](https://documentation.primetrust.com).
 
 | Branch | Status |
 |-------------|--------|
-| `main` | [![`main` Build](https://github.com/parallax-labs-team/optimus/actions/workflows/contint.yml/badge.svg?branch=main)](https://github.com/parallax-labs-team/optimus/actions/workflows/contint.yml) |
+| `main` | [![`main` Build](https://github.com/parallax-labs-team/optimus/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/parallax-labs-team/optimus/actions/workflows/ci.yml) |
 
 ## Installation
 

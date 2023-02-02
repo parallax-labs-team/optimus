@@ -10,7 +10,21 @@ defmodule PrimeTrust.API do
   @idempotency_header "X-Idempotent-ID"
   @idempotency_header_v2 "X-Idempotent-ID-V2"
 
-  @base_url "https://sandbox.primetrust.com/v2"
+  @spec get_api_url() :: String.t()
+  defp get_api_url() do
+    case Application.get_env(:optimus, :api_url) do
+      nil -> raise PrimeTrust.MissingApiUrlError
+      url -> url
+    end
+  end
+
+  @spec get_api_token() :: String.t()
+  defp get_api_token() do
+    case Application.get_env(:optimus, :api_token) do
+      nil -> raise PrimeTrust.MissingApiTokenError
+      token -> token
+    end
+  end
 
   @doc """
   Utility to generate the ID for requests using either `#{@idempotency_header}`
@@ -29,14 +43,16 @@ defmodule PrimeTrust.API do
   @spec req(method, resource :: String.t(), headers :: map, body :: map | binary(), opts :: list) ::
           {:ok, map} | {:error, map}
   def req(:get, resource, headers, body, opts) do
-    request_url = Path.join(@base_url, resource)
+    api_url = get_api_url()
+    request_url = Path.join(api_url, resource)
     make_request(:get, request_url, body, headers, opts)
   end
 
   def req(method, resource, headers, body, opts) do
     {api_type, opts} = Keyword.pop(opts, :api_type)
+    api_url = get_api_url()
     request_data = Jason.encode!(wrap(body, api_type))
-    request_url = Path.join(@base_url, resource)
+    request_url = Path.join(api_url, resource)
     make_request(method, request_url, headers, request_data, opts)
   end
 
@@ -50,7 +66,7 @@ defmodule PrimeTrust.API do
         ) ::
           {:ok, map} | {:error, map}
   defp make_request(method, url, headers, body, opts) do
-    {api_token, opts} = Keyword.pop(opts, :api_token)
+    api_token = get_api_token()
 
     req_headers =
       headers

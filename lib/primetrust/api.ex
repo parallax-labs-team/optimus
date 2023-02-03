@@ -45,7 +45,7 @@ defmodule PrimeTrust.API do
   def req(:get, resource, headers, body, opts) do
     api_url = get_api_url()
     request_url = Path.join(api_url, resource)
-    make_request(:get, request_url, body, headers, opts)
+    make_request(:get, request_url, headers, body, opts)
   end
 
   def req(method, resource, headers, body, opts) do

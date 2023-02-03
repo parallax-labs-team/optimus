@@ -53,7 +53,9 @@ jobs:
           env:
             cache: build
           with:
-            path: _build
+            path: |
+              _build
+              priv/plts
             key: cache-${{ runner.os }}-${{ env.cache }}-${{ matrix.otp }}-${{ matrix.elixir }}
             restore-keys: |
               cache-${{ runner.os }}-${{ env.cache }}

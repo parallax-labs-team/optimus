@@ -14,6 +14,14 @@ defmodule PrimeTrust.APITest do
     assert String.at(tv, 0) == "4"
   end
 
+  describe "PrimeTrust.API.req" do
+    test "Unset API key raises MissingApiUrlError" do
+      assert_raise PrimeTrust.MissingApiUrlError, fn ->
+        PrimeTrust.API.req(:get, "", %{}, %{}, [])
+      end
+    end
+  end
+
   describe "PrimeTrust.API.decode_key" do
     test "Decode API key correctly" do
       key = "account-type"

@@ -21,12 +21,12 @@ defmodule PrimeTrust do
 
   defmodule MissingApiUrlError do
     defexception message: """
-                 The `api_url` for the PrimeTrust API was not set. Please set one of the
+                 The `base_api_url` for the PrimeTrust API was not set. Please set one of the
                  following URLs in your `config.exs`, depending on what environment you
                  are using.
 
-                 config :optimus, api_url: "https://sandbox.primetrust.com/v2" # sandbox
-                 config :optimus, api_url: "https://api.primetrust.com/v2" # production
+                 config :optimus, api_url: "https://sandbox.primetrust.com" # sandbox
+                 config :optimus, api_url: "https://api.primetrust.com" # production
                  """
   end
 

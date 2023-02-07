@@ -72,16 +72,26 @@ defmodule PrimeTrust.API do
   @spec req(method, resource :: String.t(), headers :: map, body :: map | binary(), opts :: list) ::
           {:ok, map} | {:error, map}
   def req(:get, resource, headers, body, opts) do
-    api_url = get_api_url()
-    request_url = Path.join(api_url, resource)
+    {includes, opts} = Keyword.pop(opts, :includes)
+
+    request_url =
+      get_api_url()
+      |> Path.join(resource)
+      |> add_includes(includes)
+
     make_request(:get, request_url, headers, body, opts)
   end
 
   def req(method, resource, headers, body, opts) do
     {api_type, opts} = Keyword.pop(opts, :api_type)
-    api_url = get_api_url()
+    {includes, opts} = Keyword.pop(opts, :includes)
+
+    request_url =
+      get_api_url()
+      |> Path.join(resource)
+      |> add_includes(includes)
+
     request_data = Jason.encode!(wrap(body, api_type))
-    request_url = Path.join(api_url, resource)
     make_request(method, request_url, headers, request_data, opts)
   end
 
@@ -156,6 +166,15 @@ defmodule PrimeTrust.API do
       {:ok, %{"errors" => _} = err} -> err
       {:error, err} -> PrimeTrust.Error.from_api_error(status, err)
     end
+  end
+
+  defp add_includes(url, includes) when is_list(includes) do
+    qs = Enum.join(includes, ",")
+    "#{url}?include=#{qs}"
+  end
+
+  defp add_includes(url, includes) when is_binary(includes) do
+    "#{url}?include=#{includes}"
   end
 
   defp add_idempotency_header(headers, method) when method in [:post] do

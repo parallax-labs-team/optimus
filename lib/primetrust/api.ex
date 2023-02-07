@@ -10,12 +10,19 @@ defmodule PrimeTrust.API do
   @idempotency_header "X-Idempotent-ID"
   @idempotency_header_v2 "X-Idempotent-ID-V2"
 
-  @spec get_api_url() :: String.t()
-  defp get_api_url() do
-    case Application.get_env(:optimus, :api_url) do
+  @api_version "v2"
+
+  @spec get_base_api_url() :: String.t()
+  defp get_base_api_url() do
+    case Application.get_env(:optimus, :base_api_url) do
       nil -> raise PrimeTrust.MissingApiUrlError
       url -> url
     end
+  end
+
+  @spec get_api_url() :: String.t()
+  defp get_api_url() do
+    Path.join(get_base_api_url(), @api_version)
   end
 
   @spec get_api_token() :: String.t()
@@ -38,7 +45,29 @@ defmodule PrimeTrust.API do
   end
 
   @doc """
-  Make request to the PrimeTrust API.
+  Make request to the PrimeTrust API, using basic auth.
+
+  This is provided because there are a couple of out-of-band endpoints
+  that don't use PrimeTrust Bearer auth or follow their REST format,
+  like `/auth/jwts`.
+  """
+  @spec basic_req(method, resource :: String.t(), email :: binary, password :: binary) ::
+          {:ok, map} | {:error, map}
+  def basic_req(method, resource, email, password) do
+    api_url = get_base_api_url()
+    request_url = Path.join(api_url, resource)
+
+    req_headers =
+      %{}
+      |> add_basic_auth_header(email, password)
+      |> Map.to_list()
+
+    reify_response(:hackney.request(method, request_url, req_headers, <<>>, []))
+  end
+
+  @doc """
+  Make request to the PrimeTrust API, using standard Bearer token
+  authentication.
   """
   @spec req(method, resource :: String.t(), headers :: map, body :: map | binary(), opts :: list) ::
           {:ok, map} | {:error, map}
@@ -70,8 +99,9 @@ defmodule PrimeTrust.API do
 
     req_headers =
       headers
-      |> build_headers(api_token)
+      |> build_headers()
       |> add_idempotency_header(method)
+      |> add_bearer_header(api_token)
       |> Map.to_list()
 
     reify_response(:hackney.request(method, url, req_headers, body, opts))
@@ -136,6 +166,15 @@ defmodule PrimeTrust.API do
     headers
   end
 
+  defp add_bearer_header(headers, api_token) do
+    Map.put_new(headers, :Authorization, "Bearer #{api_token}")
+  end
+
+  defp add_basic_auth_header(headers, email, password) do
+    coded = Base.encode64("#{email}:#{password}")
+    Map.put_new(headers, :Authorization, "Basic #{coded}")
+  end
+
   defp decompress_response(data, headers) do
     hm = :hackney_headers.new(headers)
 
@@ -146,11 +185,10 @@ defmodule PrimeTrust.API do
     end
   end
 
-  defp build_headers(headers, api_token) do
+  defp build_headers(headers) do
     Map.merge(headers, %{
       Accept: "application/vnd.api+json",
       "Accept-Encoding": "deflate, gzip",
-      Authorization: "Bearer #{api_token}",
       Connection: "keep-alive",
       "Content-Type": "application/json"
     })

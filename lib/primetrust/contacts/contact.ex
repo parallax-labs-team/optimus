@@ -32,7 +32,7 @@ defmodule PrimeTrust.Contact do
   """
   @spec create(map, Keyword.t()) :: {:ok, map} | {:error, map}
   def create(%{account_id: _, name: _} = params, opts \\ []) do
-    API.req(:post, @resource, params, %{}, [{:api_type, @api_type} | opts])
+    API.req(:post, @resource, %{}, params, [{:api_type, @api_type} | opts])
   end
 
   @doc """

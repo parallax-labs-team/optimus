@@ -30,6 +30,6 @@ defmodule PrimeTrust.AssetContribution do
   """
   @spec create(map, Keyword.t()) :: {:ok, map} | {:error, map}
   def create(params, opts \\ []) do
-    API.req(:post, @resource, params, %{}, [{:api_type, @api_type} | opts])
+    API.req(:post, @resource, %{}, params, [{:api_type, @api_type} | opts])
   end
 end

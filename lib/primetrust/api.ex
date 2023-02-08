@@ -72,7 +72,7 @@ defmodule PrimeTrust.API do
   @spec req(method, resource :: String.t(), headers :: map, body :: map | binary(), opts :: list) ::
           {:ok, map} | {:error, map}
   def req(:get, resource, headers, body, opts) do
-    {includes, opts} = Keyword.pop(opts, :includes)
+    {includes, opts} = Keyword.pop(opts, :include)
 
     request_url =
       get_api_url()
@@ -84,7 +84,7 @@ defmodule PrimeTrust.API do
 
   def req(method, resource, headers, body, opts) do
     {api_type, opts} = Keyword.pop(opts, :api_type)
-    {includes, opts} = Keyword.pop(opts, :includes)
+    {includes, opts} = Keyword.pop(opts, :include)
 
     request_url =
       get_api_url()
@@ -175,6 +175,10 @@ defmodule PrimeTrust.API do
 
   defp add_includes(url, includes) when is_binary(includes) do
     "#{url}?include=#{includes}"
+  end
+
+  defp add_includes(url, _) do
+    url
   end
 
   defp add_idempotency_header(headers, method) when method in [:post] do

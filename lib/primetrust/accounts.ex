@@ -49,15 +49,19 @@ defmodule PrimeTrust.Accounts do
         }
 
   @type t :: %__MODULE__{
-          type: String.t(),
           id: String.t(),
-          attributes: attrs
+          type: String.t(),
+          attributes: attrs,
+          links: map,
+          relationships: map
         }
 
   defstruct [
     :type,
     :id,
-    :attributes
+    :attributes,
+    :links,
+    :relationships
   ]
 
   @doc """
@@ -84,6 +88,6 @@ defmodule PrimeTrust.Accounts do
                :owner => map
              }
   def create_personal(%{name: _, authorized_signature: _, owner: _} = params, opts \\ []) do
-    API.req(:post, @resource, params, %{}, [{:api_type, @api_type} | opts])
+    API.req(:post, @resource, %{}, params, [{:api_type, @api_type} | opts])
   end
 end

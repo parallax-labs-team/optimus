@@ -29,7 +29,7 @@ defmodule PrimeTrust.AssetTransferMethod do
   """
   @spec create(map, Keyword.t()) :: {:ok, map} | {:error, map}
   def create(params, opts \\ []) do
-    API.req(:post, @resource, params, %{}, [{:api_type, @api_type} | opts])
+    API.req(:post, @resource, %{}, params, [{:api_type, @api_type} | opts])
   end
 
   @doc """
@@ -37,6 +37,6 @@ defmodule PrimeTrust.AssetTransferMethod do
   """
   @spec update(binary, map, Keyword.t()) :: {:ok, map} | {:error, map}
   def update(id, params, opts \\ []) do
-    API.req(:patch, @resource <> "/#{id}", params, %{}, [{:api_type, @api_type} | opts])
+    API.req(:patch, @resource <> "/#{id}", %{}, params, [{:api_type, @api_type} | opts])
   end
 end

@@ -11,13 +11,7 @@ defmodule PrimeTrust.Auth.JWT do
 
   @resource "auth/jwts"
 
-  @type t :: %__MODULE__{
-          token: String.t()
-        }
-
-  defstruct [:token]
-
-  @spec create_jwt(iodata(), iodata()) :: {:ok, t} | {:error, map}
+  @spec create_jwt(binary, binary) :: {:ok, map}
   def create_jwt(email, password) do
     API.basic_req(:post, @resource, email, password)
   end
@@ -28,5 +22,17 @@ defmodule PrimeTrust.Auth.JWT do
   @spec invalidate() :: {:ok, map} | {:error, map}
   def invalidate() do
     API.req(:post, @resource <> "/invalidate-session", %{}, <<>>, [])
+  end
+
+  @spec set_jwt :: :ok
+  def set_jwt do
+    email = Application.get_env(:optimus, :email) || raise PrimeTrust.MissingCredentialsError
+
+    password =
+      Application.get_env(:optimus, :password) || raise PrimeTrust.MissingCredentialsError
+
+    {:ok, %{"token" => token}} = create_jwt(email, password)
+
+    Application.put_env(:optimus, :api_token, token)
   end
 end

@@ -1,4 +1,6 @@
 defmodule PrimeTrust do
+  use Application
+
   @moduledoc """
   HTTP client implementation for Optimus.
 
@@ -11,13 +13,31 @@ defmodule PrimeTrust do
 
   https://documentation.primetrust.com/#tag/Setting-Up
 
-  In `config/config.exs` (or your env config file) set something like the
-  following:
-
+  In config, set:
+      ```
       config :optimus,
-        api_token: "some-token-blah",
-        api_url: "https://sandbox.primetrust.com/v2"
+        base_api_url: "https://sandbox.primetrust.com/v2",
+        email: email,
+        password: password
+      ```
   """
+
+  @impl Application
+
+  @spec start(any, [{:env, :test | :dev | :prod}, ...]) :: {:error, any} | {:ok, pid}
+  def start(_type, env: env) do
+    renew_time_interval = Application.get_env(:optimus, :renew_jwt_time_interval, 28_888_888)
+
+    children =
+      if env == :test,
+        do: [],
+        else: [
+          {PrimeTrust.TokenManagement, renew_time_interval}
+        ]
+
+    opts = [strategy: :one_for_one, name: PrimeTrust.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
 
   defmodule MissingApiUrlError do
     defexception message: """
@@ -25,17 +45,35 @@ defmodule PrimeTrust do
                  following URLs in your `config.exs`, depending on what environment you
                  are using.
 
-                 config :optimus, api_url: "https://sandbox.primetrust.com" # sandbox
-                 config :optimus, api_url: "https://api.primetrust.com" # production
+                 config :optimus, base_api_url: "https://sandbox.primetrust.com" # sandbox
+                 config :optimus, base_api_url: "https://api.primetrust.com" # production
                  """
   end
 
   defmodule MissingApiTokenError do
     defexception message: """
-                 The `api_token` for the PrimeTrust API was not set. Please configure
-                 the `api_token` in your `config.exs`.
+                 The `credentials` for the PrimeTrust account. If using email/password authentication,
+                 make sure your credentials are correct.
 
-                 config :optimus, api_token: "your primetrust token"
+                   config :optimus,
+                     email: email,
+                     password: password
+
+                 """
+  end
+
+  defmodule MissingCredentialsError do
+    defexception message: """
+                 The credentials for the PrimeTrust account were not set. Please configure
+                 the email/password in your `runtime.exs` as secrets.
+
+                   email = System.get_env("OPTIMUS_EMAIL")
+                   password = System.get_env("OPTIMUS_PASSWORD")
+
+                   config :optimus,
+                      email: email
+                      password: password
+
                  """
   end
 end

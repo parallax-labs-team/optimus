@@ -20,4 +20,14 @@ defmodule PrimeTrust.Error do
       detail: ""
     }
   end
+
+  def from_api_error(status_code, errors) when status_code == 401 do
+    %__MODULE__{
+      status: status_code,
+      title: "Not authenticated.",
+      source: errors,
+      detail:
+        "Not able to authenticate with given email/password or the JWT token might be expired"
+    }
+  end
 end

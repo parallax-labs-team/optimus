@@ -11,12 +11,14 @@ defmodule PrimeTrust do
 
   https://documentation.primetrust.com/#tag/Setting-Up
 
-  In `config/config.exs` (or your env config file) set something like the
-  following:
-
+  To get the JWT token, basic auth is always needed
+  In config, set:
+      ```
       config :optimus,
-        api_token: "some-token-blah",
-        api_url: "https://sandbox.primetrust.com/v2"
+        base_api_url: "https://sandbox.primetrust.com/v2",  # or prod url
+        email: email,
+        password: password
+      ```
   """
 
   defmodule MissingApiUrlError do
@@ -25,17 +27,20 @@ defmodule PrimeTrust do
                  following URLs in your `config.exs`, depending on what environment you
                  are using.
 
-                 config :optimus, api_url: "https://sandbox.primetrust.com" # sandbox
-                 config :optimus, api_url: "https://api.primetrust.com" # production
+                 config :optimus, base_api_url: "https://sandbox.primetrust.com" # sandbox
+                 config :optimus, base_api_url: "https://api.primetrust.com" # production
                  """
   end
 
-  defmodule MissingApiTokenError do
+  defmodule MissingCredentialsError do
     defexception message: """
-                 The `api_token` for the PrimeTrust API was not set. Please configure
-                 the `api_token` in your `config.exs`.
+                 The credentials for the PrimeTrust account were not set. Please configure
+                 the email/password in your config
 
-                 config :optimus, api_token: "your primetrust token"
+                   config :optimus,
+                      email: email
+                      password: password
+
                  """
   end
 end

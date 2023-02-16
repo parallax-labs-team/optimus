@@ -27,10 +27,7 @@ defmodule PrimeTrust.API do
 
   @spec get_api_token() :: String.t()
   defp get_api_token() do
-    case Application.get_env(:optimus, :api_token) do
-      nil -> raise PrimeTrust.MissingApiTokenError
-      token -> token
-    end
+    Application.fetch_env!(:optimus, :api_token)
   end
 
   @doc """
@@ -163,7 +160,7 @@ defmodule PrimeTrust.API do
     {:ok, rsp} = :hackney.body(body)
 
     case Jason.decode(rsp, keys: &decode_key/1) do
-      {:ok, %{"errors" => _} = err} -> err
+      {:ok, %{"errors" => _} = err} -> {:error, PrimeTrust.Error.from_api_error(status, err)}
       {:error, err} -> PrimeTrust.Error.from_api_error(status, err)
     end
   end

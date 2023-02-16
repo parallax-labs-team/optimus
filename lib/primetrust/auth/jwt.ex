@@ -11,7 +11,7 @@ defmodule PrimeTrust.Auth.JWT do
 
   @resource "auth/jwts"
 
-  @spec create_jwt(binary, binary) :: {:ok, map}
+  @spec create_jwt(binary, binary) :: {:ok, map} | {:error, map}
   def create_jwt(email, password) do
     API.basic_req(:post, @resource, email, password)
   end

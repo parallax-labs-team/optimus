@@ -51,9 +51,15 @@ defmodule PrimeTrust.API do
   that don't use PrimeTrust Bearer auth or follow their REST format,
   like `/auth/jwts`.
   """
-  @spec basic_req(method, resource :: String.t(), email :: binary, password :: binary) ::
+  @spec basic_req(
+          method,
+          resource :: String.t(),
+          email :: binary,
+          password :: binary,
+          body :: map
+        ) ::
           {:ok, map} | {:error, map}
-  def basic_req(method, resource, email, password) do
+  def basic_req(method, resource, email, password, body \\ %{}) do
     api_url = get_base_api_url()
     request_url = Path.join(api_url, resource)
 
@@ -62,7 +68,8 @@ defmodule PrimeTrust.API do
       |> add_basic_auth_header(email, password)
       |> Map.to_list()
 
-    reify_response(:hackney.request(method, request_url, req_headers, <<>>, []))
+    request_data = Jason.encode!(body)
+    reify_response(:hackney.request(method, request_url, req_headers, request_data, []))
   end
 
   @doc """

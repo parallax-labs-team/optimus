@@ -18,8 +18,9 @@ defmodule PrimeTrust.Auth.JWT do
   defstruct [:token]
 
   @spec create_jwt(iodata(), iodata()) :: {:ok, t} | {:error, map}
-  def create_jwt(email, password) do
-    API.basic_req(:post, @resource, email, password)
+  def create_jwt(email, password, ttl \\ nil) do
+    body = if ttl in [0, nil], do: %{}, else: %{ttl: ttl}
+    API.basic_req(:post, @resource, email, password, body)
   end
 
   @doc """

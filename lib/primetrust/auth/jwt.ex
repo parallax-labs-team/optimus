@@ -24,10 +24,18 @@ defmodule PrimeTrust.Auth.JWT do
   end
 
   @doc """
+  Get information about the current JWT.
+  """
+  @spec get_info() :: {:ok, t} | {:error, map}
+  def get_info() do
+    API.req(:get, @resource <> "/current", %{}, <<>>, use_api_version: false)
+  end
+
+  @doc """
   Utility to invalidate the current JWT.
   """
   @spec invalidate() :: {:ok, map} | {:error, map}
   def invalidate() do
-    API.req(:post, @resource <> "/invalidate-session", %{}, <<>>, [])
+    API.req(:post, "users/current/jwts/invalidate", %{}, <<>>, [])
   end
 end

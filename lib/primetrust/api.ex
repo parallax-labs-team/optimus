@@ -20,9 +20,13 @@ defmodule PrimeTrust.API do
     end
   end
 
-  @spec get_api_url() :: String.t()
-  defp get_api_url() do
-    Path.join(get_base_api_url(), @api_version)
+  @spec get_api_url(boolean) :: String.t()
+  defp get_api_url(use_api_version) do
+    if use_api_version do
+      Path.join(get_base_api_url(), @api_version)
+    else
+      get_base_api_url()
+    end
   end
 
   @spec get_api_token() :: String.t()
@@ -65,6 +69,7 @@ defmodule PrimeTrust.API do
 
     req_headers =
       %{}
+      |> build_headers()
       |> add_basic_auth_header(email, password)
       |> Map.to_list()
 
@@ -79,10 +84,11 @@ defmodule PrimeTrust.API do
   @spec req(method, resource :: String.t(), headers :: map, body :: map | binary(), opts :: list) ::
           {:ok, map} | {:error, map}
   def req(:get, resource, headers, body, opts) do
+    {use_api_version, opts} = Keyword.pop(opts, :use_api_version, true)
     {includes, opts} = Keyword.pop(opts, :include)
 
     request_url =
-      get_api_url()
+      get_api_url(use_api_version)
       |> Path.join(resource)
       |> add_includes(includes)
 
@@ -90,15 +96,24 @@ defmodule PrimeTrust.API do
   end
 
   def req(method, resource, headers, body, opts) do
-    {api_type, opts} = Keyword.pop(opts, :api_type)
+    {use_api_version, opts} = Keyword.pop(opts, :use_api_version, true)
+    {api_type, opts} = Keyword.pop(opts, :api_type, <<>>)
     {includes, opts} = Keyword.pop(opts, :include)
 
     request_url =
-      get_api_url()
+      get_api_url(use_api_version)
       |> Path.join(resource)
       |> add_includes(includes)
 
-    request_data = wrap(body, api_type)
+    request_data =
+      case blank?(body) do
+        true ->
+          <<>>
+
+        _ ->
+          wrap(body, api_type)
+      end
+
     make_request(method, request_url, headers, request_data, opts)
   end
 
@@ -151,6 +166,11 @@ defmodule PrimeTrust.API do
     end)
   end
 
+  @spec blank?(binary) :: boolean
+  defp blank?(str_or_nil) do
+    "" == str_or_nil |> to_string() |> String.trim()
+  end
+
   @spec wrap(map | binary, binary) :: map | {:multipart, list()}
   defp wrap(%{file: file, contact_id: _} = m, "uploaded-documents") do
     form_data =
@@ -163,6 +183,10 @@ defmodule PrimeTrust.API do
        {:file, file, {["form-data"], [name: "file", filename: file]}, []}
        | form_data
      ]}
+  end
+
+  defp wrap(m, <<>>) do
+    Jason.encode!(m)
   end
 
   defp wrap(<<>>, type) do
@@ -203,7 +227,7 @@ defmodule PrimeTrust.API do
     url
   end
 
-  defp add_idempotency_header(headers, method) when method in [:post] do
+  defp add_idempotency_header(headers, method) when method in [:post, :patch] do
     Map.put_new(headers, @idempotency_header_v2, gen_idempotency_id())
   end
 

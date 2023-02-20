@@ -98,7 +98,7 @@ defmodule PrimeTrust.API do
       |> Path.join(resource)
       |> add_includes(includes)
 
-    request_data = Jason.encode!(wrap(body, api_type))
+    request_data = wrap(body, api_type)
     make_request(method, request_url, headers, request_data, opts)
   end
 
@@ -107,7 +107,7 @@ defmodule PrimeTrust.API do
           method,
           url :: String.t(),
           headers :: map(),
-          body :: iodata(),
+          body :: iodata() | {:multipart, list()},
           opts :: list()
         ) ::
           {:ok, map} | {:error, map}
@@ -151,13 +151,28 @@ defmodule PrimeTrust.API do
     end)
   end
 
-  @spec wrap(map | binary, binary) :: map
+  @spec wrap(map | binary, binary) :: map | {:multipart, list()}
+  defp wrap(%{file: file, contact_id: _} = m, "uploaded-documents") do
+    form_data =
+      m
+      |> Map.delete(:file)
+      |> Enum.map(fn {k, v} -> {to_string(k), v} end)
+
+    {:multipart,
+     [
+       {:file, file, {["form-data"], [name: "file", filename: file]}, []}
+       | form_data
+     ]}
+  end
+
   defp wrap(<<>>, type) do
     %{data: %{type: type, attributes: %{}}}
+    |> Jason.encode!()
   end
 
   defp wrap(m, type) do
     %{data: %{type: type, attributes: m}}
+    |> Jason.encode!()
   end
 
   defp reify_response({:ok, status, headers, body}) when status >= 200 and status < 300 do

@@ -166,7 +166,11 @@ defmodule PrimeTrust.API do
     end)
   end
 
-  @spec blank?(binary) :: boolean
+  @spec blank?(map | binary()) :: boolean
+  defp blank?(body) when is_map(body) do
+    false
+  end
+
   defp blank?(str_or_nil) do
     "" == str_or_nil |> to_string() |> String.trim()
   end

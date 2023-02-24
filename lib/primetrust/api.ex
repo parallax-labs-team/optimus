@@ -206,13 +206,13 @@ defmodule PrimeTrust.API do
   defp reify_response({:ok, status, headers, body}) when status >= 200 and status < 300 do
     {:ok, data} = :hackney.body(body)
     expanded_data = decompress_response(data, headers)
-    {:ok, Jason.decode!(expanded_data, keys: &decode_key/1)}
+    {:ok, Jason.decode!(expanded_data, keys: &decode_key/1, floats: :decimals)}
   end
 
   defp reify_response({:ok, status, _headers, body}) when status >= 300 do
     {:ok, rsp} = :hackney.body(body)
 
-    case Jason.decode(rsp, keys: &decode_key/1) do
+    case Jason.decode(rsp, keys: &decode_key/1, floats: :decimals) do
       {:ok, %{"errors" => _} = err} -> err
       {:error, err} -> PrimeTrust.Error.from_api_error(status, err)
     end

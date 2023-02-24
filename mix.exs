@@ -29,6 +29,7 @@ defmodule Optimus.MixProject do
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:hackney, "~> 1.18"},
       {:jason, "~> 1.4"},
+      {:decimal, "~> 1.0 or ~> 2.0"},
       {:elixir_uuid, "~> 1.2"}
     ]
   end

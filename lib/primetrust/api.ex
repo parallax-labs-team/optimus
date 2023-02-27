@@ -214,7 +214,7 @@ defmodule PrimeTrust.API do
 
     case Jason.decode(rsp, keys: &decode_key/1, floats: :decimals) do
       {:ok, %{"errors" => _} = err} -> err
-      {:error, err} -> PrimeTrust.Error.from_api_error(status, err)
+      {:error, err} -> {:error, PrimeTrust.Error.from_api_error(status, err)}
     end
   end
 

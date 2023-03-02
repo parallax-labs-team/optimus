@@ -28,7 +28,7 @@ defmodule PrimeTrust.Auth.JWT do
   """
   @spec get_info() :: {:ok, t} | {:error, map}
   def get_info() do
-    API.req(:get, @resource <> "/current", %{}, <<>>, use_api_version: false)
+    API.req(:get, @resource <> "/current", use_api_version: false)
   end
 
   @doc """
@@ -36,6 +36,6 @@ defmodule PrimeTrust.Auth.JWT do
   """
   @spec invalidate() :: {:ok, map} | {:error, map}
   def invalidate() do
-    API.req(:post, "users/current/jwts/invalidate", %{}, <<>>, [])
+    API.req(:post, "users/current/jwts/invalidate")
   end
 end

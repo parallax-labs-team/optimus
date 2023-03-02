@@ -81,10 +81,13 @@ defmodule PrimeTrust.API do
   Make request to the PrimeTrust API, using standard Bearer token
   authentication.
   """
-  @spec req(method, resource :: String.t(), headers :: map, body :: map | binary(), opts :: list) ::
-          {:ok, map} | {:error, map}
-  def req(:get, resource, headers, body, opts) do
+  @spec req(method, resource :: String.t(), opts :: Keyword.t()) :: {:ok, map} | {:error, map}
+  def req(method, resource, opts \\ [])
+
+  def req(:get, resource, opts) do
     {use_api_version, opts} = Keyword.pop(opts, :use_api_version, true)
+    {headers, opts} = Keyword.pop(opts, :headers, %{})
+    {body, opts} = Keyword.pop(opts, :body, <<>>)
     {includes, opts} = Keyword.pop(opts, :include)
 
     request_url =
@@ -95,9 +98,11 @@ defmodule PrimeTrust.API do
     make_request(:get, request_url, headers, body, opts)
   end
 
-  def req(method, resource, headers, body, opts) do
+  def req(method, resource, opts) do
     {use_api_version, opts} = Keyword.pop(opts, :use_api_version, true)
     {api_type, opts} = Keyword.pop(opts, :api_type, <<>>)
+    {headers, opts} = Keyword.pop(opts, :headers, %{})
+    {body, opts} = Keyword.pop(opts, :body, <<>>)
     {includes, opts} = Keyword.pop(opts, :include)
 
     request_url =

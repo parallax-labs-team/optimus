@@ -16,8 +16,10 @@ defmodule PrimeTrust.APITest do
 
   describe "PrimeTrust.API.req" do
     test "Unset API key raises MissingApiUrlError" do
+      Application.delete_env(:optimus, :base_api_url)
+
       assert_raise PrimeTrust.MissingApiUrlError, fn ->
-        PrimeTrust.API.req(:get, "", %{}, %{}, [])
+        PrimeTrust.API.req(:get, "")
       end
     end
   end

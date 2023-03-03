@@ -68,14 +68,14 @@ defmodule PrimeTrust.Accounts do
   Fetches the `/accounts` index
   """
   def list(opts \\ []) do
-    API.req(:get, @resource, %{}, <<>>, opts)
+    API.req(:get, @resource, opts)
   end
 
   @doc """
   Fetches a single account by its Prime Trust ID (an UUIDv4).
   """
   def get(id, opts \\ []) do
-    API.req(:get, @resource <> "/#{id}", %{}, <<>>, opts)
+    API.req(:get, @resource <> "/#{id}", opts)
   end
 
   @doc """
@@ -88,6 +88,12 @@ defmodule PrimeTrust.Accounts do
                :owner => map
              }
   def create_personal(%{name: _, authorized_signature: _, owner: _} = params, opts \\ []) do
-    API.req(:post, @resource, %{}, params, [{:api_type, @api_type} | opts])
+    opts =
+      [
+        {:api_type, @api_type},
+        {:body, params}
+      ] ++ opts
+
+    API.req(:post, @resource, opts)
   end
 end

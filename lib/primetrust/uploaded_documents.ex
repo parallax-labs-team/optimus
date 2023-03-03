@@ -65,14 +65,14 @@ defmodule PrimeTrust.UploadedDocuments do
   Fetches the `/uploaded_documents` index
   """
   def list(opts \\ []) do
-    API.req(:get, @resource, %{}, <<>>, opts)
+    API.req(:get, @resource, opts)
   end
 
   @doc """
   Fetches a single account by its Prime Trust ID (an UUIDv4).
   """
   def get(id, opts \\ []) do
-    API.req(:get, @resource <> "/#{id}", %{}, <<>>, opts)
+    API.req(:get, @resource <> "/#{id}", opts)
   end
 
   @doc """
@@ -84,6 +84,12 @@ defmodule PrimeTrust.UploadedDocuments do
                :contact_id => String.t()
              }
   def create_per_contact(%{file: _, contact_id: _} = params, opts \\ []) do
-    API.req(:post, @resource, %{}, params, [{:api_type, @api_type} | opts])
+    opts =
+      [
+        {:api_type, @api_type},
+        {:body, params}
+      ] ++ opts
+
+    API.req(:post, @resource, opts)
   end
 end

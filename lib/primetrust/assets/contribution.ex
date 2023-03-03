@@ -14,7 +14,7 @@ defmodule PrimeTrust.AssetContribution do
   """
   @spec list(Keyword.t()) :: {:ok, map} | {:error | map}
   def list(opts \\ []) do
-    API.req(:get, @resource, %{}, <<>>, opts)
+    API.req(:get, @resource, opts)
   end
 
   @doc """
@@ -22,7 +22,7 @@ defmodule PrimeTrust.AssetContribution do
   """
   @spec get(binary, Keyword.t()) :: {:ok, map} | {:error | map}
   def get(id, opts \\ []) do
-    API.req(:get, @resource <> "/#{id}", %{}, <<>>, opts)
+    API.req(:get, @resource <> "/#{id}", opts)
   end
 
   @doc """
@@ -30,6 +30,12 @@ defmodule PrimeTrust.AssetContribution do
   """
   @spec create(map, Keyword.t()) :: {:ok, map} | {:error, map}
   def create(params, opts \\ []) do
-    API.req(:post, @resource, %{}, params, [{:api_type, @api_type} | opts])
+    opts =
+      [
+        {:api_type, @api_type},
+        {:body, params}
+      ] ++ opts
+
+    API.req(:post, @resource, opts)
   end
 end

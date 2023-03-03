@@ -1,10 +1,9 @@
 defmodule PrimeTrust.API do
   @moduledoc """
-  The Prime Trust API~
+  The reference Prime Trust API implementation
   """
-
-  # variant of valid methods against the API
-  @type method :: :get | :post | :patch | :delete
+  alias PrimeTrust.APIBehaviour
+  @behaviour APIBehaviour
 
   # https://documentation.primetrust.com/#section/Getting-Started/Idempotent-Object-Creation
   @idempotency_header "X-Idempotent-ID"
@@ -48,21 +47,6 @@ defmodule PrimeTrust.API do
     UUID.uuid4(:default)
   end
 
-  @doc """
-  Make request to the PrimeTrust API, using basic auth.
-
-  This is provided because there are a couple of out-of-band endpoints
-  that don't use PrimeTrust Bearer auth or follow their REST format,
-  like `/auth/jwts`.
-  """
-  @spec basic_req(
-          method,
-          resource :: String.t(),
-          email :: binary,
-          password :: binary,
-          body :: map
-        ) ::
-          {:ok, map} | {:error, map}
   def basic_req(method, resource, email, password, body \\ %{}) do
     api_url = get_base_api_url()
     request_url = Path.join(api_url, resource)
@@ -77,11 +61,6 @@ defmodule PrimeTrust.API do
     reify_response(:hackney.request(method, request_url, req_headers, request_data, []))
   end
 
-  @doc """
-  Make request to the PrimeTrust API, using standard Bearer token
-  authentication.
-  """
-  @spec req(method, resource :: String.t(), opts :: Keyword.t()) :: {:ok, map} | {:error, map}
   def req(method, resource, opts \\ [])
 
   def req(:get, resource, opts) do
@@ -124,7 +103,7 @@ defmodule PrimeTrust.API do
 
   # The request maker behind the throne
   @spec make_request(
-          method,
+          method :: APIBehaviour.method(),
           url :: String.t(),
           headers :: map(),
           body :: iodata() | {:multipart, list()},

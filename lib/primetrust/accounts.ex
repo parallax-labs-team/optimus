@@ -81,12 +81,7 @@ defmodule PrimeTrust.Accounts do
   @doc """
   Create a Personal Custodial Account.
   """
-  @spec create_personal(params, Keyword.t()) :: {:ok, t} | {:error, map}
-        when params: %{
-               :name => String.t(),
-               :authorized_signature => String.t(),
-               :owner => map
-             }
+  @spec create_personal(params :: map, opts :: Keyword.t()) :: {:ok, t} | {:error, map}
   def create_personal(%{name: _, authorized_signature: _, owner: _} = params, opts \\ []) do
     opts =
       [

@@ -6,11 +6,18 @@ defmodule PrimeTrust.API do
   # variant of valid methods against the API
   @type method :: :get | :post | :patch | :delete
 
+  @typep http_ok :: {:ok, integer, [{binary, binary}], binary}
+  @typep http_error :: {:error, any}
+
   # https://documentation.primetrust.com/#section/Getting-Started/Idempotent-Object-Creation
   @idempotency_header "X-Idempotent-ID"
   @idempotency_header_v2 "X-Idempotent-ID-V2"
 
   @api_version "v2"
+
+  @max_retries 3
+  @base_retry_time 500
+  @max_retry_time 2000
 
   @spec get_base_api_url() :: String.t()
   defp get_base_api_url() do
@@ -74,7 +81,7 @@ defmodule PrimeTrust.API do
       |> Map.to_list()
 
     request_data = Jason.encode!(body)
-    reify_response(:hackney.request(method, request_url, req_headers, request_data, []))
+    make_request_with_retry(method, request_url, req_headers, request_data, [], 0)
   end
 
   @doc """
@@ -141,8 +148,57 @@ defmodule PrimeTrust.API do
       |> add_bearer_header(api_token)
       |> Map.to_list()
 
-    reify_response(:hackney.request(method, url, req_headers, body, opts))
+    make_request_with_retry(method, url, req_headers, body, opts, 0)
   end
+
+  @spec make_request_with_retry(
+          method,
+          url :: binary,
+          headers :: Keyword.t(),
+          body :: iodata() | {:multipart, list()},
+          opts :: list,
+          retries :: integer
+        ) :: {:ok, map} | {:error, map}
+  defp make_request_with_retry(method, url, headers, body, opts, retries) do
+    response = :hackney.request(method, url, headers, body, opts)
+
+    if should_retry?(response) and can_retry?(retries) do
+      retries
+      |> calculate_backoff()
+      |> Process.sleep()
+
+      make_request_with_retry(method, url, headers, body, opts, retries + 1)
+    else
+      reify_response(response)
+    end
+  end
+
+  defp calculate_backoff(retries) do
+    (@base_retry_time * :math.pow(2, retries))
+    |> min(@max_retry_time)
+    |> jitterize()
+    |> max(@base_retry_time)
+    |> trunc()
+  end
+
+  defp jitterize(backoff) do
+    # jitter off of the input backoff time,
+    # using 'equal jitter' algorithm
+    half_back = backoff * 0.5
+    half_back + :rand.uniform(trunc(half_back))
+  end
+
+  defp can_retry?(retries) do
+    retries <= @max_retries
+  end
+
+  @spec should_retry?(http_ok | http_error) :: boolean
+  # The only documented HTTP code that would be retry-able is 500, could be a blip
+  defp should_retry?({:ok, 500, _headers, _body}), do: true
+  defp should_retry?({:error, :econnrefused}), do: true
+  defp should_retry?({:error, :connect_timeout}), do: true
+  defp should_retry?({:error, :timeout}), do: true
+  defp should_retry?(_response), do: false
 
   @doc """
   A helper for nice-ifying keys in API responses, because Prime Trust
